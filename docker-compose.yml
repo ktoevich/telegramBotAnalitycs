@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  telegram-bot:
+    build: .
+    container_name: analytics-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      # Пробрасываем базу данных наружу, чтобы она не удалилась при перезапуске контейнера
+      - ./bot_database.db:/app/bot_database.db
