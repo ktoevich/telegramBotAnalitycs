@@ -6,13 +6,10 @@ async def summarize_lesson(messages: list) -> str:
     if not messages:
         return "Нет сообщений для данного урока."
 
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        return "Ошибка: не задан ключ GEMINI_API_KEY."
-
-    genai.configure(api_key=api_key)
-    # Using 'gemini-flash-latest' based on available models
-    model = genai.GenerativeModel('gemini-flash-latest')
+    keys_to_try = [os.getenv("GEMINI_API_KEY"), os.getenv("GEMINI_API_KEY_2")]
+    keys_to_try = [k for k in keys_to_try if k]
+    if not keys_to_try:
+        return "Ошибка: не заданы ключи GEMINI_API_KEY."
 
     prompt = (
         "Пожалуйста, проанализируй следующий лог сообщений из чата урока.\n"
@@ -26,8 +23,16 @@ async def summarize_lesson(messages: list) -> str:
     for username, text, timestamp in messages:
         prompt += f"[{timestamp}] {username}: {text}\n"
 
-    try:
-        response = await model.generate_content_async(prompt)
-        return response.text
-    except Exception as e:
-        return f"Произошла ошибка при генерации ответа от AI: {e}"
+    last_error = None
+    for api_key in keys_to_try:
+        try:
+            genai.configure(api_key=api_key)
+            model = genai.GenerativeModel('gemini-flash-latest')
+            response = await model.generate_content_async(prompt)
+            return response.text
+        except Exception as e:
+            last_error = e
+            # Try the next API key if available
+            continue
+
+    return f"Произошла ошибка при генерации ответа от AI (все ключи не сработали): {last_error}"
