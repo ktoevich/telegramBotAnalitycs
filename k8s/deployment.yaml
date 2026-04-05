@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: telegram-bot
+  namespace: shr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: telegram-bot
+  strategy:
+    type: Recreate  # required: SQLite does not support concurrent access
+  template:
+    metadata:
+      labels:
+        app: telegram-bot
+    spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+      containers:
+        - name: telegram-bot
+          image: ghcr.io/ktoevich/telegrambotanalitycs:latest
+          imagePullPolicy: Always
+          env:
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: telegram-bot-secrets
+                  key: TELEGRAM_BOT_TOKEN
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: telegram-bot-secrets
+                  key: GEMINI_API_KEY
+          volumeMounts:
+            - name: db-storage
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+      volumes:
+        - name: db-storage
+          persistentVolumeClaim:
+            claimName: telegram-bot-db

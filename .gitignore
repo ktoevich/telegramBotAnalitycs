@@ -2,6 +2,9 @@
 venv/
 .env
 
+# Kubernetes secrets (apply manually with kubectl, never commit)
+k8s/secret.yaml
+
 # База данных
 bot_database.db
 
