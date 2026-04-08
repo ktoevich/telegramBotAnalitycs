@@ -2,7 +2,7 @@ import sqlite3
 import datetime
 from pathlib import Path
 
-DB_FILE = 'bot_database.db'
+DB_FILE = '/data/bot_database.db'
 
 def get_connection():
     return sqlite3.connect(DB_FILE)
